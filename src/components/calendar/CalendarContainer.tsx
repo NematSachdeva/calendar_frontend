@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { addMonths, subMonths, isBefore, format } from "date-fns";
+import { motion } from "framer-motion";
 import HeroImage from "./HeroImage";
 import CalendarGrid from "./CalendarGrid";
 import NotesPanel from "@/components/notes/NotesPanel";
@@ -15,6 +16,9 @@ const CalendarContainer = () => {
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains("dark")
   );
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<Date | null>(null);
+  const dragRef = useRef<HTMLDivElement>(null);
 
   const { notes, addNote, deleteNote, getNotesMap } = useCalendarNotes();
 
@@ -50,20 +54,99 @@ const CalendarContainer = () => {
     [rangeStart, rangeEnd]
   );
 
+  const handleDayMouseDown = useCallback((date: Date) => {
+    setIsDragging(true);
+    setDragStart(date);
+    setRangeStart(date);
+    setRangeEnd(null);
+    setSelectedDate(date);
+  }, []);
+
+  const handleDayMouseEnter = useCallback(
+    (date: Date) => {
+      if (isDragging && dragStart) {
+        if (isBefore(date, dragStart)) {
+          setRangeStart(date);
+          setRangeEnd(dragStart);
+        } else {
+          setRangeStart(dragStart);
+          setRangeEnd(date);
+        }
+      }
+    },
+    [isDragging, dragStart]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setDragStart(null);
+  }, []);
+
+  const handleTouchStart = useCallback((date: Date) => {
+    setIsDragging(true);
+    setDragStart(date);
+    setRangeStart(date);
+    setRangeEnd(null);
+    setSelectedDate(date);
+  }, []);
+
+  const handleTouchMove = useCallback(
+    (date: Date) => {
+      if (isDragging && dragStart) {
+        if (isBefore(date, dragStart)) {
+          setRangeStart(date);
+          setRangeEnd(dragStart);
+        } else {
+          setRangeStart(dragStart);
+          setRangeEnd(date);
+        }
+      }
+    },
+    [isDragging, dragStart]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    setDragStart(null);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [handleMouseUp, handleTouchEnd]);
+
   const monthKey = format(currentMonth, "yyyy-MM");
   const notesMap = getNotesMap(monthKey);
   const monthNotes = notes.filter((n) => n.dateKey.startsWith(monthKey));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      ref={dragRef}
+      className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 select-none"
+      onMouseLeave={() => setIsDragging(false)}
+    >
       <div className="relative">
         <DarkModeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
         <HeroImage currentMonth={currentMonth} />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-4 relative z-10 pb-12">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-72 xl:w-80 order-2 lg:order-1">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 -mt-6 relative z-10 pb-16"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-1 order-2 lg:order-1"
+          >
             <NotesPanel
               currentMonth={currentMonth}
               selectedDate={selectedDate}
@@ -71,8 +154,15 @@ const CalendarContainer = () => {
               onAddNote={addNote}
               onDeleteNote={deleteNote}
             />
-          </div>
-          <div className="flex-1 order-1 lg:order-2">
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-2 order-1 lg:order-2"
+            onMouseUp={handleMouseUp}
+          >
             <CalendarGrid
               currentMonth={currentMonth}
               onPrevMonth={handlePrevMonth}
@@ -80,12 +170,17 @@ const CalendarContainer = () => {
               rangeStart={rangeStart}
               rangeEnd={rangeEnd}
               onDayClick={handleDayClick}
+              onDayMouseDown={handleDayMouseDown}
+              onDayMouseEnter={handleDayMouseEnter}
+              onDayTouchStart={handleTouchStart}
+              onDayTouchMove={handleTouchMove}
               notesMap={notesMap}
               direction={direction}
+              isDragging={isDragging}
             />
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

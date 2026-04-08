@@ -25,8 +25,13 @@ interface CalendarGridProps {
   rangeStart: Date | null;
   rangeEnd: Date | null;
   onDayClick: (date: Date) => void;
+  onDayMouseDown?: (date: Date) => void;
+  onDayMouseEnter?: (date: Date) => void;
+  onDayTouchStart?: (date: Date) => void;
+  onDayTouchMove?: (date: Date) => void;
   notesMap: Record<string, CalendarNote[]>;
   direction: number;
+  isDragging?: boolean;
 }
 
 const CalendarGrid = ({
@@ -36,8 +41,13 @@ const CalendarGrid = ({
   rangeStart,
   rangeEnd,
   onDayClick,
+  onDayMouseDown,
+  onDayMouseEnter,
+  onDayTouchStart,
+  onDayTouchMove,
   notesMap,
   direction,
+  isDragging = false,
 }: CalendarGridProps) => {
   const today = new Date();
 
@@ -63,29 +73,40 @@ const CalendarGrid = ({
       : null;
 
   const monthKey = format(currentMonth, "yyyy-MM");
+  const daysBetween = effectiveStart && effectiveEnd
+    ? Math.abs(Math.round((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24))) + 1
+    : 0;
 
   const variants = {
-    enter: (d: number) => ({ x: d > 0 ? 200 : -200, opacity: 0 }),
+    enter: (d: number) => ({ x: d > 0 ? 300 : -300, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (d: number) => ({ x: d > 0 ? -200 : 200, opacity: 0 }),
+    exit: (d: number) => ({ x: d > 0 ? -300 : 300, opacity: 0 }),
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-card p-3 md:p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="bg-card rounded-2xl shadow-lg p-4 md:p-8 border border-border/50"
+    >
       <MonthNavigator
         currentMonth={currentMonth}
         onPrev={onPrevMonth}
         onNext={onNextMonth}
       />
 
-      <div className="grid grid-cols-7 gap-px mb-1">
+      <div className="grid grid-cols-7 gap-2 mb-6">
         {WEEKDAYS.map((wd) => (
-          <div
+          <motion.div
             key={wd}
-            className="text-center text-[10px] font-body font-semibold text-muted-foreground uppercase tracking-widest py-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-center text-xs font-bold text-muted-foreground uppercase tracking-widest py-2"
           >
             {wd}
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -97,10 +118,10 @@ const CalendarGrid = ({
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.25, ease: "easeInOut" }}
-          className="grid grid-cols-7 gap-px bg-border/30 rounded-lg overflow-hidden"
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="grid grid-cols-7 gap-2"
         >
-          {days.map((day) => {
+          {days.map((day, idx) => {
             const isOverflow = !isSameMonth(day, currentMonth);
             const isStart = effectiveStart ? isSameDay(day, effectiveStart) : false;
             const isEnd = effectiveEnd ? isSameDay(day, effectiveEnd) : false;
@@ -114,43 +135,54 @@ const CalendarGrid = ({
             const dayNotes = notesMap[dateStr] || [];
 
             return (
-              <DayCell
+              <motion.div
                 key={dateStr}
-                day={day.getDate()}
-                isToday={isSameDay(day, today)}
-                isOverflow={isOverflow}
-                isRangeStart={isStart}
-                isRangeEnd={isEnd}
-                isInRange={isInRange}
-                onClick={() => onDayClick(day)}
-                notes={dayNotes}
-              />
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (idx % 7) * 0.02 }}
+                onMouseDown={() => onDayMouseDown?.(day)}
+                onMouseEnter={() => onDayMouseEnter?.(day)}
+                onTouchStart={() => onDayTouchStart?.(day)}
+                onTouchMove={() => onDayTouchMove?.(day)}
+              >
+                <DayCell
+                  day={day.getDate()}
+                  isToday={isSameDay(day, today)}
+                  isOverflow={isOverflow}
+                  isRangeStart={isStart}
+                  isRangeEnd={isEnd}
+                  isInRange={isInRange}
+                  onClick={() => !isDragging && onDayClick(day)}
+                  notes={dayNotes}
+                  isDragging={isDragging}
+                />
+              </motion.div>
             );
           })}
         </motion.div>
       </AnimatePresence>
 
-      {effectiveStart && effectiveEnd && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 text-center text-sm font-body text-muted-foreground"
-        >
-          Selected: <span className="font-semibold text-foreground">{format(effectiveStart, "MMM d")}</span>
-          {" → "}
-          <span className="font-semibold text-foreground">{format(effectiveEnd, "MMM d")}</span>
-          {" "}
-          <span className="text-primary font-semibold">
-            ({Math.abs(
-              Math.round(
-                (effectiveEnd.getTime() - effectiveStart.getTime()) /
-                  (1000 * 60 * 60 * 24)
-              )
-            ) + 1} days)
-          </span>
-        </motion.div>
-      )}
-    </div>
+      <AnimatePresence>
+        {effectiveStart && effectiveEnd && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-6 pt-6 border-t border-border/50"
+          >
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-muted-foreground">Selected:</span>
+              <span className="font-semibold text-foreground">{format(effectiveStart, "MMM d")}</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="font-semibold text-foreground">{format(effectiveEnd, "MMM d")}</span>
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+                {daysBetween} days
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

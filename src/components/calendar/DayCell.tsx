@@ -13,6 +13,7 @@ interface DayCellProps {
   isInRange: boolean;
   onClick: () => void;
   notes: CalendarNote[];
+  isDragging?: boolean;
 }
 
 const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
@@ -22,7 +23,8 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
   return (
     <div
       className={cn(
-        "px-1 py-0.5 rounded text-[9px] leading-tight truncate shadow-sm font-body font-medium",
+        "px-1.5 py-0.5 rounded text-[8px] leading-tight font-body font-medium shadow-sm",
+        "max-w-full truncate whitespace-nowrap overflow-hidden",
         rotation,
         colors.bg,
         colors.text,
@@ -44,6 +46,7 @@ const DayCell = ({
   isInRange,
   onClick,
   notes,
+  isDragging = false,
 }: DayCellProps) => {
   const [hovered, setHovered] = useState(false);
   const visibleNotes = notes.slice(0, 2);
@@ -57,30 +60,33 @@ const DayCell = ({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative flex flex-col items-stretch p-1 min-h-[4.5rem] sm:min-h-[5.5rem] rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent",
+        "relative w-full h-24 sm:h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col",
         isOverflow && "text-calendar-overflow cursor-default opacity-40",
         !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent hover:border-border",
         isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today ring-inset font-semibold",
         isRangeStart && "bg-calendar-range-start text-primary-foreground font-semibold shadow-soft rounded-l-lg rounded-r-none",
         isRangeEnd && "bg-calendar-range-end text-primary-foreground font-semibold shadow-soft rounded-r-lg rounded-l-none",
-        isInRange && !isRangeStart && !isRangeEnd && "bg-calendar-range text-accent-foreground rounded-none"
+        isInRange && !isRangeStart && !isRangeEnd && "bg-calendar-range text-accent-foreground rounded-none",
+        isDragging && "opacity-70"
       )}
     >
-      <span className={cn(
-        "self-end w-6 h-6 flex items-center justify-center rounded-full text-xs",
-        isToday && !isRangeStart && !isRangeEnd && "bg-calendar-today text-primary-foreground font-bold"
-      )}>
-        {day}
-      </span>
+      <div className="flex justify-end mb-auto">
+        <span className={cn(
+          "w-6 h-6 flex items-center justify-center rounded-full text-xs flex-shrink-0",
+          isToday && !isRangeStart && !isRangeEnd && "bg-calendar-today text-primary-foreground font-bold"
+        )}>
+          {day}
+        </span>
+      </div>
 
       {!isOverflow && visibleNotes.length > 0 && (
-        <div className="flex flex-col gap-0.5 mt-0.5 overflow-hidden">
+        <div className="flex flex-col gap-0.5 overflow-hidden">
           {visibleNotes.map((note) => (
             <StickyNote key={note.id} note={note} index={visibleNotes.indexOf(note)} />
           ))}
           {overflowCount > 0 && (
-            <span className="text-[8px] text-muted-foreground font-body text-center">
-              +{overflowCount} more
+            <span className="text-[7px] text-muted-foreground font-body text-center px-0.5 flex-shrink-0">
+              +{overflowCount}
             </span>
           )}
         </div>
@@ -102,7 +108,7 @@ const DayCell = ({
                   <div
                     key={note.id}
                     className={cn(
-                      "px-2 py-1 rounded text-xs font-body",
+                      "px-2 py-1 rounded text-xs font-body truncate",
                       colors.bg,
                       colors.text,
                       colors.darkBg
