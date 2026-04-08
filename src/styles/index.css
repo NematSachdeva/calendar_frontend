@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 35 30% 97%;
+    --foreground: 25 20% 15%;
+
+    --card: 35 25% 95%;
+    --card-foreground: 25 20% 15%;
+
+    --popover: 35 25% 95%;
+    --popover-foreground: 25 20% 15%;
+
+    --primary: 24 70% 50%;
+    --primary-foreground: 35 30% 97%;
+
+    --secondary: 150 20% 45%;
+    --secondary-foreground: 35 30% 97%;
+
+    --muted: 30 15% 90%;
+    --muted-foreground: 25 10% 50%;
+
+    --accent: 24 50% 92%;
+    --accent-foreground: 24 70% 35%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 30 20% 87%;
+    --input: 30 20% 87%;
+    --ring: 24 70% 50%;
+
+    --radius: 0.75rem;
+
+    --calendar-today: 24 75% 55%;
+    --calendar-range: 24 60% 93%;
+    --calendar-range-start: 24 70% 50%;
+    --calendar-range-end: 150 30% 42%;
+    --calendar-note-dot: 24 70% 60%;
+    --calendar-overflow: 30 10% 75%;
+
+    --shadow-soft: 0 2px 12px -2px hsl(25 20% 15% / 0.08);
+    --shadow-card: 0 4px 24px -4px hsl(25 20% 15% / 0.1);
+    --shadow-elevated: 0 8px 40px -8px hsl(25 20% 15% / 0.15);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 25 15% 10%;
+    --foreground: 35 20% 90%;
+
+    --card: 25 12% 14%;
+    --card-foreground: 35 20% 90%;
+
+    --popover: 25 12% 14%;
+    --popover-foreground: 35 20% 90%;
+
+    --primary: 24 70% 55%;
+    --primary-foreground: 25 15% 10%;
+
+    --secondary: 150 25% 40%;
+    --secondary-foreground: 35 20% 90%;
+
+    --muted: 25 10% 20%;
+    --muted-foreground: 30 10% 55%;
+
+    --accent: 24 40% 20%;
+    --accent-foreground: 24 60% 70%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 25 10% 22%;
+    --input: 25 10% 22%;
+    --ring: 24 70% 55%;
+
+    --calendar-today: 24 75% 55%;
+    --calendar-range: 24 40% 18%;
+    --calendar-range-start: 24 70% 55%;
+    --calendar-range-end: 150 30% 45%;
+    --calendar-note-dot: 24 70% 60%;
+    --calendar-overflow: 25 5% 35%;
+
+    --shadow-soft: 0 2px 12px -2px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
+    --shadow-elevated: 0 8px 40px -8px hsl(0 0% 0% / 0.5);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+/* Calendar component styles now handled inline via Tailwind utilities in DayCell.tsx */
