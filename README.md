@@ -4,7 +4,7 @@ A modern, fluid, and intuitive calendar application designed for seamless event 
 
 ## 🚀 Demo
 
-**Live Demo:** https://calendar-frontend-two-woad.vercel.app *(Placeholder)*
+**Live Demo:** https://calendar-frontend-two-woad.vercel.app **
 
 ---
 
