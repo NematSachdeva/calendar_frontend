@@ -42,6 +42,25 @@ export function useCalendarNotes() {
     setNotes((prev) => prev.filter((note) => note.id !== id));
   }, []);
 
+  const updateNote = useCallback(
+    (id: string, text: string, color: NoteColor, startDate?: string, endDate?: string) => {
+      setNotes((prev) =>
+        prev.map((note) =>
+          note.id === id
+            ? {
+                ...note,
+                text,
+                color,
+                startDate: startDate ?? note.startDate,
+                endDate: endDate ?? note.endDate,
+              }
+            : note
+        )
+      );
+    },
+    []
+  );
+
   const getNotesForDate = useCallback(
     (dateKey: string): CalendarNote[] => {
       return notes.filter((note) => note.startDate === dateKey && note.endDate === dateKey);
@@ -75,5 +94,5 @@ export function useCalendarNotes() {
     [notes]
   );
 
-  return { notes, addNote, deleteNote, getNotesForDate, getNotesMap };
+  return { notes, addNote, deleteNote, updateNote, getNotesForDate, getNotesMap };
 }

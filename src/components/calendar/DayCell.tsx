@@ -15,20 +15,38 @@ interface DayCellProps {
   onClick: () => void;
   notes: CalendarNote[];
   isDragging?: boolean;
+  onEditNote?: (id: string) => void;
 }
 
-const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
+const StickyNote = ({ 
+  note, 
+  index, 
+  onEdit 
+}: { 
+  note: CalendarNote; 
+  index: number; 
+  onEdit?: (id: string) => void 
+}) => {
   const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
   const rotation = index % 2 === 0 ? "-rotate-1" : "rotate-1";
   const isRange = note.startDate !== note.endDate;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onEdit) {
+      e.stopPropagation();
+      onEdit(note.id);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ y: -1, scale: 1.02, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
+      onClick={handleClick}
       className={cn(
         "px-2 py-0.5 rounded-sm text-[9px] leading-tight font-body font-semibold shadow-sm border-l-2",
-        "max-w-full truncate whitespace-nowrap overflow-hidden transition-all duration-200 flex items-center gap-1",
+        "max-w-full truncate whitespace-nowrap overflow-hidden transition-all duration-200 flex items-center gap-1 cursor-pointer",
         rotation,
         colors.bg,
         colors.text,
@@ -53,6 +71,7 @@ const DayCell = ({
   onClick,
   notes,
   isDragging = false,
+  onEditNote,
 }: DayCellProps) => {
   const [hovered, setHovered] = useState(false);
   
@@ -111,7 +130,12 @@ const DayCell = ({
       {!isOverflow && visibleNotes.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {visibleNotes.map((note) => (
-            <StickyNote key={note.id} note={note} index={visibleNotes.indexOf(note)} />
+            <StickyNote 
+              key={note.id} 
+              note={note} 
+              index={visibleNotes.indexOf(note)} 
+              onEdit={onEditNote}
+            />
           ))}
           {overflowCount > 0 && (
             <span className="text-[8px] text-muted-foreground font-bold text-center py-0.5">

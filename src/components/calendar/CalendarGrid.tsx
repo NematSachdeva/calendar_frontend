@@ -35,6 +35,7 @@ interface CalendarGridProps {
   allNotes: CalendarNote[];
   direction: number;
   isDragging?: boolean;
+  onStartEdit?: (id: string) => void;
 }
 
 const CalendarGrid = ({
@@ -52,6 +53,7 @@ const CalendarGrid = ({
   allNotes,
   direction,
   isDragging = false,
+  onStartEdit,
 }: CalendarGridProps) => {
   const today = new Date();
 
@@ -166,6 +168,7 @@ const CalendarGrid = ({
                   onClick={() => !isDragging && onDayClick(day)}
                   notes={dayNotes}
                   isDragging={isDragging}
+                  onEditNote={onStartEdit}
                 />
               </motion.div>
             );

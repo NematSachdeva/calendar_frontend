@@ -18,13 +18,28 @@ const CalendarContainer = () => {
   );
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Date | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const dragRef = useRef<HTMLDivElement>(null);
 
-  const { notes, addNote, deleteNote, getNotesMap } = useCalendarNotes();
+  const { notes, addNote, deleteNote, updateNote, getNotesMap } = useCalendarNotes();
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
+
+  const handleStartEdit = useCallback((id: string) => {
+    setEditingNoteId(id);
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      setRangeStart(new Date(note.startDate));
+      setRangeEnd(new Date(note.endDate));
+      setSelectedDate(new Date(note.startDate));
+    }
+  }, [notes]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingNoteId(null);
+  }, []);
 
   const handlePrevMonth = useCallback(() => {
     setDirection(-1);
@@ -154,7 +169,11 @@ const CalendarContainer = () => {
               rangeEnd={rangeEnd}
               notes={monthNotes}
               onAddNote={addNote}
+              onUpdateNote={updateNote}
               onDeleteNote={deleteNote}
+              editingNoteId={editingNoteId}
+              onStartEdit={handleStartEdit}
+              onCancelEdit={handleCancelEdit}
             />
           </motion.div>
 
@@ -180,6 +199,7 @@ const CalendarContainer = () => {
               allNotes={notes}
               direction={direction}
               isDragging={isDragging}
+              onStartEdit={handleStartEdit}
             />
           </motion.div>
         </div>
