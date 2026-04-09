@@ -21,7 +21,9 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
   const rotation = index % 2 === 0 ? "-rotate-1" : "rotate-1";
 
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+      transition={{ duration: 0.2 }}
       className={cn(
         "px-1.5 py-0.5 rounded text-[8px] leading-tight font-body font-medium shadow-sm",
         "max-w-full truncate whitespace-nowrap overflow-hidden",
@@ -33,7 +35,7 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
       title={note.text}
     >
       {note.text}
-    </div>
+    </motion.div>
   );
 };
 
@@ -54,20 +56,25 @@ const DayCell = ({
 
   return (
     <motion.button
-      whileHover={!isOverflow ? { scale: 1.04 } : undefined}
-      whileTap={!isOverflow ? { scale: 0.97 } : undefined}
+      whileHover={!isOverflow ? { 
+        scale: 1.02,
+        y: -2,
+        boxShadow: "0 8px 24px rgba(0,0,0,0.12)"
+      } : undefined}
+      whileTap={!isOverflow ? { scale: 0.98, y: 0 } : undefined}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       onClick={!isOverflow ? onClick : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative w-full h-24 sm:h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col",
+        "relative w-full h-24 sm:h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col shadow-soft",
         isOverflow && "text-calendar-overflow cursor-default opacity-40",
         !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent hover:border-border",
         isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today ring-inset font-semibold",
         isRangeStart && "bg-calendar-range-start text-primary-foreground font-semibold shadow-soft rounded-l-lg rounded-r-none",
         isRangeEnd && "bg-calendar-range-end text-primary-foreground font-semibold shadow-soft rounded-r-lg rounded-l-none",
         isInRange && !isRangeStart && !isRangeEnd && "bg-calendar-range text-accent-foreground rounded-none",
-        isDragging && "opacity-70"
+        isDragging && "opacity-70 shadow-elevated"
       )}
     >
       <div className="flex justify-end mb-auto">

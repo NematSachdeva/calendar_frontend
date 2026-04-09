@@ -41,7 +41,12 @@ const NotesPanel = ({
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-card p-4 md:p-6 flex flex-col h-full">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="bg-card rounded-xl shadow-card p-4 md:p-6 flex flex-col h-full border border-border/30"
+    >
       <div className="flex items-center gap-2 mb-4">
         <StickyNote className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-display font-semibold text-foreground">Notes</h3>
@@ -113,6 +118,8 @@ const NotesPanel = ({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                whileHover={{ y: -2, boxShadow: "0 8px 16px rgba(0,0,0,0.12)" }}
+                transition={{ duration: 0.2 }}
                 className={cn(
                   "group rounded-lg p-3 shadow-soft border border-border",
                   colors.bg
@@ -141,7 +148,7 @@ const NotesPanel = ({
           })}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

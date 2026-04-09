@@ -8,7 +8,7 @@ interface HeroImageProps {
 const HeroImage = ({ currentMonth }: HeroImageProps) => {
   return (
     <div
-      className="relative w-full h-56 sm:h-72 md:h-80 lg:h-96 overflow-hidden"
+      className="relative w-full h-56 sm:h-72 md:h-80 lg:h-96 overflow-hidden shadow-lg"
       style={{ clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 90%)" }}
     >
       <img
@@ -19,7 +19,8 @@ const HeroImage = ({ currentMonth }: HeroImageProps) => {
         height={640}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
-      <div className="absolute bottom-12 left-8 md:left-12">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-50" />
+      <div className="absolute bottom-12 left-8 md:left-12 relative z-10">
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white drop-shadow-lg tracking-tight">
           {format(currentMonth, "MMMM")}
         </h1>

@@ -145,7 +145,8 @@ const CalendarContainer = () => {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="lg:col-span-1 order-2 lg:order-1"
+            whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+            className="lg:col-span-1 order-2 lg:order-1 transition-shadow duration-300"
           >
             <NotesPanel
               currentMonth={currentMonth}

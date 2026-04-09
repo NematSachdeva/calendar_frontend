@@ -88,7 +88,8 @@ const CalendarGrid = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="bg-card rounded-2xl shadow-lg p-4 md:p-8 border border-border/50"
+      whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+      className="bg-card rounded-2xl shadow-lg p-4 md:p-8 border border-border/50 transition-shadow duration-300"
     >
       <MonthNavigator
         currentMonth={currentMonth}
