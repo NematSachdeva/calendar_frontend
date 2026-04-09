@@ -22,15 +22,15 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -2, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+      whileHover={{ y: -1, scale: 1.02, boxShadow: "0 4px 8px rgba(0,0,0,0.1)" }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "px-1.5 py-0.5 rounded text-[8px] leading-tight font-body font-medium shadow-sm",
-        "max-w-full truncate whitespace-nowrap overflow-hidden",
+        "px-2 py-0.5 rounded-sm text-[9px] leading-tight font-body font-semibold shadow-sm border-l-2",
+        "max-w-full truncate whitespace-nowrap overflow-hidden transition-all duration-200",
         rotation,
         colors.bg,
         colors.text,
-        colors.darkBg
+        "border-black/5"
       )}
       title={note.text}
     >
@@ -51,74 +51,86 @@ const DayCell = ({
   isDragging = false,
 }: DayCellProps) => {
   const [hovered, setHovered] = useState(false);
-  const visibleNotes = notes.slice(0, 2);
-  const overflowCount = notes.length - 2;
+  
+  // Single-day notes are shown as sticky notes
+  // Range notes are handled by RangeNotesOverlay
+  // We only show notes that are NOT range notes here? 
+  // Actually, the notes prop likely contains ALL notes for this day.
+  // We should filter them to only show single-day notes if they aren't filtered already.
+  const singleDayNotes = notes.filter(n => n.startDate === n.endDate);
+  const visibleNotes = singleDayNotes.slice(0, 2);
+  const overflowCount = singleDayNotes.length - 2;
 
   return (
     <motion.button
       whileHover={!isOverflow ? { 
-        scale: 1.02,
-        y: -2,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.12)"
+        y: -1,
+        boxShadow: "0 8px 30px rgba(0,0,0,0.08)"
       } : undefined}
-      whileTap={!isOverflow ? { scale: 0.98, y: 0 } : undefined}
+      whileTap={!isOverflow ? { scale: 0.98 } : undefined}
       transition={{ duration: 0.2, ease: "easeOut" }}
       onClick={!isOverflow ? onClick : undefined}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative w-full h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col shadow-soft",
-        isOverflow && "text-calendar-overflow cursor-default opacity-40",
-        !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent hover:border-border",
-        isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today ring-inset font-semibold",
-        isRangeStart && "bg-calendar-range-start text-primary-foreground font-semibold shadow-soft rounded-l-lg rounded-r-none",
-        isRangeEnd && "bg-calendar-range-end text-primary-foreground font-semibold shadow-soft rounded-r-lg rounded-l-none",
-        isInRange && !isRangeStart && !isRangeEnd && "bg-calendar-range text-accent-foreground rounded-none",
-        isDragging && "opacity-70 shadow-elevated"
+        "relative w-full h-28 p-2 rounded-xl text-sm font-body font-medium transition-all duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col items-stretch",
+        isOverflow && "text-calendar-overflow cursor-default opacity-30",
+        !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent/40 hover:border-border/50 bg-card/30",
+        isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today/30 ring-inset font-semibold bg-calendar-today/5",
+        isRangeStart && "bg-calendar-range-start/90 text-primary-foreground font-semibold shadow-md z-10",
+        isRangeEnd && "bg-calendar-range-end/90 text-primary-foreground font-semibold shadow-md z-10",
+        isInRange && !isRangeStart && !isRangeEnd && "bg-calendar-range/50 text-accent-foreground backdrop-blur-[1px]",
+        isDragging && "opacity-70 shadow-lg scale-[0.99]"
       )}
     >
-      <div className="flex justify-end mb-auto">
+      <div className="flex justify-between items-start mb-1">
+        <div className="flex-1" />
         <span className={cn(
-          "w-6 h-6 flex items-center justify-center rounded-full text-xs flex-shrink-0",
-          isToday && !isRangeStart && !isRangeEnd && "bg-calendar-today text-primary-foreground font-bold"
+          "w-6 h-6 flex items-center justify-center rounded-full text-[11px] transition-colors duration-200",
+          isToday && !isRangeStart && !isRangeEnd && "bg-calendar-today text-white font-bold shadow-sm"
         )}>
           {day}
         </span>
       </div>
 
+      {/* Spacing for RangeNotesOverlay (roughly 38px to 70px) */}
+      <div className="h-10 pointer-events-none" />
+
+      {/* Single day notes footer */}
       {!isOverflow && visibleNotes.length > 0 && (
-        <div className="flex flex-col gap-0.5 overflow-hidden">
+        <div className="flex flex-col gap-1 mt-auto">
           {visibleNotes.map((note) => (
             <StickyNote key={note.id} note={note} index={visibleNotes.indexOf(note)} />
           ))}
           {overflowCount > 0 && (
-            <span className="text-[7px] text-muted-foreground font-body text-center px-0.5 flex-shrink-0">
-              +{overflowCount}
+            <span className="text-[8px] text-muted-foreground font-bold text-center py-0.5">
+              +{overflowCount} more
             </span>
           )}
         </div>
       )}
 
       <AnimatePresence>
-        {hovered && notes.length > 0 && !isOverflow && (
+        {hovered && singleDayNotes.length > 0 && !isOverflow && (
           <motion.div
             initial={{ opacity: 0, y: 4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-1 bg-popover border border-border rounded-lg shadow-elevated p-2 min-w-[140px] max-w-[200px] pointer-events-none"
+            className="absolute z-[60] bottom-full left-1/2 -translate-x-1/2 mb-2 bg-popover/95 backdrop-blur-md border border-border rounded-xl shadow-elevated p-3 min-w-[160px] max-w-[220px] pointer-events-none"
           >
-            <div className="flex flex-col gap-1">
-              {notes.map((note) => {
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-1">Notes</p>
+              {singleDayNotes.map((note) => {
                 const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
                 return (
                   <div
                     key={note.id}
                     className={cn(
-                      "px-2 py-1 rounded text-xs font-body truncate",
+                      "px-2 py-1.5 rounded-md text-[11px] font-body whitespace-pre-wrap leading-tight shadow-sm border-l-2",
                       colors.bg,
                       colors.text,
-                      colors.darkBg
+                      "border-black/5"
                     )}
                   >
                     {note.text}

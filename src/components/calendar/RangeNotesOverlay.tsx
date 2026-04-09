@@ -5,14 +5,9 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isSameDay,
-  isWithinInterval,
-  isBefore,
-  isAfter,
   format,
-  differenceInDays,
 } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NOTE_COLORS } from "@/lib/constants";
 import type { CalendarNote } from "@/types/calendar";
@@ -46,7 +41,7 @@ const RangeNotesOverlay = ({
     return map;
   }, [days]);
 
-  const rangeSegments = useMemo(() => {
+  const { segments, rowOverflows } = useMemo(() => {
     const segments: Array<{
       noteId: string;
       startIdx: number;
@@ -57,14 +52,13 @@ const RangeNotesOverlay = ({
       rowIndexOffset: number;
     }> = [];
 
-    // Simple vertical stacking within a row
     const rowNoteCount: Record<number, number> = {};
+    const rowOverflows: Record<number, number> = {};
 
     rangeNotes.forEach((note) => {
       const startIdx = dayIndexMap.get(note.startDate);
       const endIdx = dayIndexMap.get(note.endDate);
 
-      // Skip notes where start/end are not in current view
       if (startIdx === undefined && endIdx === undefined) return;
 
       const actualStartIdx = startIdx ?? 0;
@@ -78,59 +72,85 @@ const RangeNotesOverlay = ({
         const rowEnd = row === endRow ? actualEndIdx : (row + 1) * 7 - 1;
 
         if (!rowNoteCount[row]) rowNoteCount[row] = 0;
-        const rowIndexOffset = rowNoteCount[row];
         
-        segments.push({
-          noteId: `${note.id}-${row}`,
-          startIdx: rowStart,
-          endIdx: rowEnd,
-          rowIdx: row,
-          color: note.color,
-          text: note.text,
-          rowIndexOffset,
-        });
+        if (rowNoteCount[row] < 2) {
+          segments.push({
+            noteId: `${note.id}-${row}`,
+            startIdx: rowStart,
+            endIdx: rowEnd,
+            rowIdx: row,
+            color: note.color,
+            text: note.text,
+            rowIndexOffset: rowNoteCount[row],
+          });
+        } else {
+          rowOverflows[row] = (rowOverflows[row] || 0) + 1;
+        }
         
         rowNoteCount[row]++;
       }
     });
 
-    return segments;
+    return { segments, rowOverflows };
   }, [rangeNotes, dayIndexMap, days]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-20">
-      {rangeSegments.map((segment) => {
-        const colors = NOTE_COLORS[segment.color as any] || NOTE_COLORS.yellow;
-        const startCol = segment.startIdx % 7;
-        const endCol = segment.endIdx % 7;
-        const colSpan = endCol - startCol + 1;
+    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden">
+      <AnimatePresence>
+        {segments.map((segment) => {
+          const colors = NOTE_COLORS[segment.color as any] || NOTE_COLORS.yellow;
+          const startCol = segment.startIdx % 7;
+          const endCol = segment.endIdx % 7;
+          const colSpan = endCol - startCol + 1;
 
-        const left = `calc(${(startCol / 7) * 100}% + ${startCol * cellGap}px)`;
-        const width = `calc(${(colSpan / 7) * 100}% + ${(colSpan - 1) * cellGap}px)`;
-        // Fixed positioning within the cell: after the date number (which is at the top)
-        // Date number is roughly 24px high. Let's put notes starting below it.
-        const top = segment.rowIdx * (cellHeight + cellGap) + 32 + (segment.rowIndexOffset * 22);
+          const left = `calc(${(startCol / 7) * 100}% + ${startCol * cellGap + 4}px)`;
+          const width = `calc(${(colSpan / 7) * 100}% - ${8}px + ${(colSpan - 1) * cellGap}px)`;
+          
+          // Thinner bars: h-2.5 (10px)
+          // Spacing: 36px from top, 4px between bars
+          const top = segment.rowIdx * (cellHeight + cellGap) + 38 + (segment.rowIndexOffset * 14);
 
+          return (
+            <motion.div
+              key={segment.noteId}
+              initial={{ opacity: 0, scaleX: 0, y: 2 }}
+              animate={{ opacity: 0.9, scaleX: 1, y: 0 }}
+              exit={{ opacity: 0, scaleX: 0 }}
+              whileHover={{ 
+                opacity: 1, 
+                scaleY: 1.1, 
+                filter: "brightness(1.05)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
+              transition={{ duration: 0.3, ease: "circOut" }}
+              className={cn(
+                "absolute h-[10px] flex items-center rounded-full px-2 text-[0px] shadow-sm border border-black/5 origin-left cursor-help pointer-events-auto transition-all duration-200",
+                colors.bg,
+                colors.text
+              )}
+              style={{
+                left,
+                width,
+                top: `${top}px`,
+              }}
+              title={segment.text}
+            />
+          );
+        })}
+      </AnimatePresence>
+
+      {Object.entries(rowOverflows).map(([rowStr, count]) => {
+        const row = parseInt(rowStr);
+        const top = row * (cellHeight + cellGap) + 38 + (2 * 14);
+        
         return (
-          <motion.div
-            key={segment.noteId}
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={{ opacity: 1, scaleX: 1 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className={cn(
-              "absolute h-5 flex items-center rounded px-2 text-[10px] font-body font-bold truncate shadow-sm border border-black/5 origin-left",
-              colors.bg,
-              colors.text
-            )}
-            style={{
-              left,
-              width,
-              top: `${top}px`,
-            }}
-            title={segment.text}
+          <div
+            key={`overflow-${row}`}
+            className="absolute right-4 text-[9px] font-bold text-muted-foreground bg-accent/50 px-1.5 py-0.5 rounded-full"
+            style={{ top: `${top}px` }}
           >
-            {segment.text}
-          </motion.div>
+            +{count} more
+          </div>
         );
       })}
     </div>
@@ -138,3 +158,4 @@ const RangeNotesOverlay = ({
 };
 
 export default RangeNotesOverlay;
+
