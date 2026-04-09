@@ -111,17 +111,18 @@ const CalendarGrid = ({
         ))}
       </div>
 
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={monthKey}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="grid grid-cols-7 gap-2"
-        >
+      <div className="relative">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={monthKey}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="grid grid-cols-7 gap-2"
+          >
           {days.map((day, idx) => {
             const isOverflow = !isSameMonth(day, currentMonth);
             const isStart = effectiveStart ? isSameDay(day, effectiveStart) : false;
@@ -162,6 +163,7 @@ const CalendarGrid = ({
           })}
         </motion.div>
       </AnimatePresence>
+      </div>
 
       <AnimatePresence>
         {effectiveStart && effectiveEnd && (
