@@ -6,6 +6,7 @@ import type { CalendarNote } from "@/types/calendar";
 
 interface DayCellProps {
   day: number;
+  dateKey: string;
   isToday: boolean;
   isOverflow: boolean;
   isRangeStart: boolean;
@@ -19,6 +20,7 @@ interface DayCellProps {
 const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
   const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
   const rotation = index % 2 === 0 ? "-rotate-1" : "rotate-1";
+  const isRange = note.startDate !== note.endDate;
 
   return (
     <motion.div
@@ -26,14 +28,15 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
       transition={{ duration: 0.2 }}
       className={cn(
         "px-2 py-0.5 rounded-sm text-[9px] leading-tight font-body font-semibold shadow-sm border-l-2",
-        "max-w-full truncate whitespace-nowrap overflow-hidden transition-all duration-200",
+        "max-w-full truncate whitespace-nowrap overflow-hidden transition-all duration-200 flex items-center gap-1",
         rotation,
         colors.bg,
         colors.text,
         "border-black/5"
       )}
-      title={note.text}
+      title={note.text + (isRange ? ` (${note.startDate} → ${note.endDate})` : "")}
     >
+      {isRange && <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60 flex-shrink-0" />}
       {note.text}
     </motion.div>
   );
@@ -41,6 +44,7 @@ const StickyNote = ({ note, index }: { note: CalendarNote; index: number }) => {
 
 const DayCell = ({
   day,
+  dateKey,
   isToday,
   isOverflow,
   isRangeStart,
@@ -52,14 +56,13 @@ const DayCell = ({
 }: DayCellProps) => {
   const [hovered, setHovered] = useState(false);
   
-  // Single-day notes are shown as sticky notes
-  // Range notes are handled by RangeNotesOverlay
-  // We only show notes that are NOT range notes here? 
-  // Actually, the notes prop likely contains ALL notes for this day.
-  // We should filter them to only show single-day notes if they aren't filtered already.
-  const singleDayNotes = notes.filter(n => n.startDate === n.endDate);
-  const visibleNotes = singleDayNotes.slice(0, 2);
-  const overflowCount = singleDayNotes.length - 2;
+  // Show sticky notes for starts
+  const startNotes = notes.filter(n => n.startDate === dateKey);
+  // Show dots for ends (only if not also a start on this same day, which shouldn't happen usually but good to check)
+  const endNotes = notes.filter(n => n.endDate === dateKey && n.startDate !== dateKey);
+
+  const visibleNotes = startNotes.slice(0, 3);
+  const overflowCount = startNotes.length - 3;
 
   return (
     <motion.button
@@ -75,7 +78,7 @@ const DayCell = ({
       className={cn(
         "relative w-full h-28 p-2 rounded-xl text-sm font-body font-medium transition-all duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col items-stretch",
         isOverflow && "text-calendar-overflow cursor-default opacity-30",
-        !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent/40 hover:border-border/50 bg-card/30",
+        !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent/40 hover:border-border/50 bg-card/10",
         isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today/30 ring-inset font-semibold bg-calendar-today/5",
         isRangeStart && "bg-calendar-range-start/90 text-primary-foreground font-semibold shadow-md z-10",
         isRangeEnd && "bg-calendar-range-end/90 text-primary-foreground font-semibold shadow-md z-10",
@@ -83,8 +86,19 @@ const DayCell = ({
         isDragging && "opacity-70 shadow-lg scale-[0.99]"
       )}
     >
-      <div className="flex justify-between items-start mb-1">
-        <div className="flex-1" />
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex gap-1">
+          {endNotes.map(n => {
+            const colors = NOTE_COLORS[n.color] || NOTE_COLORS.yellow;
+            return (
+              <div 
+                key={n.id} 
+                className={cn("w-2 h-2 rounded-full shadow-sm", colors.bg, "border border-black/10")} 
+                title={`End of: ${n.text}`}
+              />
+            );
+          })}
+        </div>
         <span className={cn(
           "w-6 h-6 flex items-center justify-center rounded-full text-[11px] transition-colors duration-200",
           isToday && !isRangeStart && !isRangeEnd && "bg-calendar-today text-white font-bold shadow-sm"
@@ -93,12 +107,9 @@ const DayCell = ({
         </span>
       </div>
 
-      {/* Spacing for RangeNotesOverlay (roughly 38px to 70px) */}
-      <div className="h-10 pointer-events-none" />
-
-      {/* Single day notes footer */}
+      {/* Sticky notes list */}
       {!isOverflow && visibleNotes.length > 0 && (
-        <div className="flex flex-col gap-1 mt-auto">
+        <div className="flex flex-col gap-1.5">
           {visibleNotes.map((note) => (
             <StickyNote key={note.id} note={note} index={visibleNotes.indexOf(note)} />
           ))}
@@ -111,32 +122,68 @@ const DayCell = ({
       )}
 
       <AnimatePresence>
-        {hovered && singleDayNotes.length > 0 && !isOverflow && (
+        {hovered && notes.length > 0 && !isOverflow && (
           <motion.div
             initial={{ opacity: 0, y: 4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-[60] bottom-full left-1/2 -translate-x-1/2 mb-2 bg-popover/95 backdrop-blur-md border border-border rounded-xl shadow-elevated p-3 min-w-[160px] max-w-[220px] pointer-events-none"
+            className="absolute z-[60] bottom-full left-1/2 -translate-x-1/2 mb-2 bg-popover/95 backdrop-blur-md border border-border rounded-xl shadow-elevated p-3 min-w-[180px] max-w-[240px] pointer-events-none"
           >
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-1">Notes</p>
-              {singleDayNotes.map((note) => {
-                const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
-                return (
-                  <div
-                    key={note.id}
-                    className={cn(
-                      "px-2 py-1.5 rounded-md text-[11px] font-body whitespace-pre-wrap leading-tight shadow-sm border-l-2",
-                      colors.bg,
-                      colors.text,
-                      "border-black/5"
-                    )}
-                  >
-                    {note.text}
-                  </div>
-                );
-              })}
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-1">Day Summary</p>
+              
+              {startNotes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[9px] font-bold text-primary/70 uppercase">Starting today</p>
+                  {startNotes.map((note) => {
+                    const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
+                    return (
+                      <div
+                        key={note.id}
+                        className={cn(
+                          "px-2 py-1.5 rounded-md text-[11px] font-body whitespace-pre-wrap leading-tight shadow-sm border-l-2",
+                          colors.bg,
+                          colors.text,
+                          "border-black/5"
+                        )}
+                      >
+                        {note.text}
+                        {note.startDate !== note.endDate && (
+                          <div className="mt-1 text-[9px] opacity-70 italic">
+                            Ends: {note.endDate}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {endNotes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[9px] font-bold text-secondary/70 uppercase">Ending today</p>
+                  {endNotes.map((note) => {
+                    const colors = NOTE_COLORS[note.color] || NOTE_COLORS.yellow;
+                    return (
+                      <div
+                        key={note.id}
+                        className={cn(
+                          "px-2 py-1.5 rounded-md text-[11px] font-body whitespace-pre-wrap leading-tight shadow-sm border-l-2 opacity-80",
+                          colors.bg,
+                          colors.text,
+                          "border-black/5"
+                        )}
+                      >
+                        {note.text}
+                        <div className="mt-1 text-[9px] opacity-70 italic">
+                          Started: {note.startDate}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </motion.div>
         )}

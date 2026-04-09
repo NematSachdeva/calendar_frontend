@@ -120,12 +120,6 @@ const CalendarGrid = ({
       </div>
 
       <div className="relative">
-        <RangeNotesOverlay 
-          currentMonth={currentMonth} 
-          rangeNotes={rangeNotes} 
-          cellHeight={112} 
-          cellGap={8} 
-        />
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={monthKey}
@@ -163,6 +157,7 @@ const CalendarGrid = ({
               >
                 <DayCell
                   day={day.getDate()}
+                  dateKey={dateStr}
                   isToday={isSameDay(day, today)}
                   isOverflow={isOverflow}
                   isRangeStart={isStart}

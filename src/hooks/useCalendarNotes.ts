@@ -53,13 +53,20 @@ export function useCalendarNotes() {
     (monthPrefix: string): Record<string, CalendarNote[]> => {
       const map: Record<string, CalendarNote[]> = {};
       notes.forEach((note) => {
-        // Only include single-day notes in the map for DayCell
-        if (note.startDate === note.endDate) {
-          if (note.startDate.startsWith(monthPrefix)) {
-            if (!map[note.startDate]) {
-              map[note.startDate] = [];
-            }
-            map[note.startDate].push(note);
+        // Include note on its start date
+        if (!map[note.startDate]) {
+          map[note.startDate] = [];
+        }
+        map[note.startDate].push(note);
+
+        // Also include on end date if it's a range note
+        if (note.startDate !== note.endDate) {
+          if (!map[note.endDate]) {
+            map[note.endDate] = [];
+          }
+          // Check if it's already there (e.g. if start and end are in the same month)
+          if (!map[note.endDate].includes(note)) {
+            map[note.endDate].push(note);
           }
         }
       });

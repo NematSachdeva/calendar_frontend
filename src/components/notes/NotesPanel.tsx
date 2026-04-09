@@ -57,8 +57,8 @@ const NotesPanel = ({
 
       <div className="mb-3">
         {rangeStart && rangeEnd && !isSameDay(rangeStart, rangeEnd) ? (
-          <p className="text-xs font-body text-muted-foreground">
-            {format(rangeStart, "MMM d")} - {format(rangeEnd, "MMM d, yyyy")}
+          <p className="text-xs font-body text-muted-foreground flex items-center gap-1.5">
+            {format(rangeStart, "MMM d")} <span className="text-[10px] opacity-70">→</span> {format(rangeEnd, "MMM d, yyyy")}
           </p>
         ) : selectedDate ? (
           <p className="text-xs font-body text-muted-foreground">
@@ -141,9 +141,15 @@ const NotesPanel = ({
                     <p className={cn("text-sm font-body whitespace-pre-wrap", colors.text)}>
                       {note.text}
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-1.5 font-body">
+                    <p className="text-[11px] text-muted-foreground mt-1.5 font-body flex items-center gap-1">
                       {isRange 
-                        ? `${format(new Date(note.startDate), "MMM d")} - ${format(new Date(note.endDate), "MMM d")}`
+                        ? (
+                          <>
+                            {format(new Date(note.startDate), "MMM d")} 
+                            <span className="text-[9px] opacity-60">→</span>
+                            {format(new Date(note.endDate), "MMM d")}
+                          </>
+                        )
                         : format(new Date(note.startDate), "MMM d")
                       }
                     </p>
