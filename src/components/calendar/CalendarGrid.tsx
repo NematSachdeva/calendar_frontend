@@ -18,6 +18,8 @@ import MonthNavigator from "./MonthNavigator";
 import { WEEKDAYS } from "@/lib/constants";
 import type { CalendarNote } from "@/types/calendar";
 
+import RangeNotesOverlay from "./RangeNotesOverlay";
+
 interface CalendarGridProps {
   currentMonth: Date;
   onPrevMonth: () => void;
@@ -30,6 +32,7 @@ interface CalendarGridProps {
   onDayTouchStart?: (date: Date) => void;
   onDayTouchMove?: (date: Date) => void;
   notesMap: Record<string, CalendarNote[]>;
+  allNotes: CalendarNote[];
   direction: number;
   isDragging?: boolean;
 }
@@ -46,6 +49,7 @@ const CalendarGrid = ({
   onDayTouchStart,
   onDayTouchMove,
   notesMap,
+  allNotes,
   direction,
   isDragging = false,
 }: CalendarGridProps) => {
@@ -58,6 +62,10 @@ const CalendarGrid = ({
     const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
     return eachDayOfInterval({ start: calStart, end: calEnd });
   }, [currentMonth]);
+
+  const rangeNotes = useMemo(() => {
+    return allNotes.filter(n => n.startDate !== n.endDate);
+  }, [allNotes]);
 
   const effectiveStart =
     rangeStart && rangeEnd
@@ -89,7 +97,7 @@ const CalendarGrid = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
-      className="bg-card rounded-2xl shadow-lg p-4 md:p-8 border border-border/50 transition-shadow duration-300"
+      className="bg-card rounded-2xl shadow-lg p-4 md:p-8 border border-border/50 transition-shadow duration-300 relative"
     >
       <MonthNavigator
         currentMonth={currentMonth}
@@ -112,6 +120,12 @@ const CalendarGrid = ({
       </div>
 
       <div className="relative">
+        <RangeNotesOverlay 
+          currentMonth={currentMonth} 
+          rangeNotes={rangeNotes} 
+          cellHeight={112} 
+          cellGap={8} 
+        />
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={monthKey}

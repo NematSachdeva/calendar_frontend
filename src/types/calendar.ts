@@ -3,7 +3,8 @@ export type NoteColor = "yellow" | "blue" | "green" | "pink";
 export interface CalendarNote {
   id: string;
   text: string;
-  dateKey: string;
+  startDate: string;
+  endDate: string;
   color: NoteColor;
   createdAt: number;
 }

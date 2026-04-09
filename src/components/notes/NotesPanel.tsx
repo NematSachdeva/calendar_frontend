@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,18 @@ import type { CalendarNote, NoteColor } from "@/types/calendar";
 interface NotesPanelProps {
   currentMonth: Date;
   selectedDate: Date | null;
+  rangeStart: Date | null;
+  rangeEnd: Date | null;
   notes: CalendarNote[];
-  onAddNote: (text: string, dateKey: string, color: NoteColor) => void;
+  onAddNote: (text: string, startDate: string, endDate: string, color: NoteColor) => void;
   onDeleteNote: (id: string) => void;
 }
 
 const NotesPanel = ({
   currentMonth,
   selectedDate,
+  rangeStart,
+  rangeEnd,
   notes,
   onAddNote,
   onDeleteNote,
@@ -26,17 +30,16 @@ const NotesPanel = ({
   const [draft, setDraft] = useState("");
   const [selectedColor, setSelectedColor] = useState<NoteColor>("yellow");
 
-  const dateKey = selectedDate
-    ? format(selectedDate, "yyyy-MM-dd")
-    : null;
+  const startStr = rangeStart ? format(rangeStart, "yyyy-MM-dd") : null;
+  const endStr = rangeEnd ? format(rangeEnd, "yyyy-MM-dd") : startStr;
 
-  const displayNotes = dateKey
-    ? notes.filter((n) => n.dateKey === dateKey)
+  const displayNotes = startStr && endStr
+    ? notes.filter((n) => n.startDate === startStr && n.endDate === endStr)
     : notes;
 
   const handleAdd = () => {
-    if (!draft.trim() || !dateKey) return;
-    onAddNote(draft.trim(), dateKey, selectedColor);
+    if (!draft.trim() || !startStr || !endStr) return;
+    onAddNote(draft.trim(), startStr, endStr, selectedColor);
     setDraft("");
   };
 
@@ -52,17 +55,23 @@ const NotesPanel = ({
         <h3 className="text-lg font-display font-semibold text-foreground">Notes</h3>
       </div>
 
-      {selectedDate ? (
-        <p className="text-xs font-body text-muted-foreground mb-3">
-          {format(selectedDate, "EEEE, MMM d, yyyy")}
-        </p>
-      ) : (
-        <p className="text-xs font-body text-muted-foreground mb-3">
-          Select a date to add notes
-        </p>
-      )}
+      <div className="mb-3">
+        {rangeStart && rangeEnd && !isSameDay(rangeStart, rangeEnd) ? (
+          <p className="text-xs font-body text-muted-foreground">
+            {format(rangeStart, "MMM d")} - {format(rangeEnd, "MMM d, yyyy")}
+          </p>
+        ) : selectedDate ? (
+          <p className="text-xs font-body text-muted-foreground">
+            {format(selectedDate, "EEEE, MMM d, yyyy")}
+          </p>
+        ) : (
+          <p className="text-xs font-body text-muted-foreground">
+            Select a date or range to add notes
+          </p>
+        )}
+      </div>
 
-      {selectedDate && (
+      {(selectedDate || (rangeStart && rangeEnd)) && (
         <div className="flex flex-col gap-2 mb-4">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-xs text-muted-foreground font-body mr-1">Color:</span>
@@ -83,7 +92,7 @@ const NotesPanel = ({
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Add a note for this date…"
+            placeholder="Add a note…"
             className="resize-none text-sm font-body min-h-[72px] bg-background border-border"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd();
@@ -105,13 +114,15 @@ const NotesPanel = ({
         <AnimatePresence>
           {displayNotes.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6 font-body">
-              {selectedDate
-                ? "No notes for this date yet."
+              {startStr
+                ? "No notes for this selection yet."
                 : `No notes for ${format(currentMonth, "MMMM")} yet.`}
             </p>
           )}
           {displayNotes.map((note) => {
             const colors = NOTE_DISPLAY_COLORS[note.color] || NOTE_DISPLAY_COLORS.yellow;
+            const isRange = note.startDate !== note.endDate;
+            
             return (
               <motion.div
                 key={note.id}
@@ -131,7 +142,10 @@ const NotesPanel = ({
                       {note.text}
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-1.5 font-body">
-                      {format(new Date(note.dateKey), "MMM d")}
+                      {isRange 
+                        ? `${format(new Date(note.startDate), "MMM d")} - ${format(new Date(note.endDate), "MMM d")}`
+                        : format(new Date(note.startDate), "MMM d")
+                      }
                     </p>
                   </div>
                   <Button

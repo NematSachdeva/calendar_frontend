@@ -121,15 +121,15 @@ const CalendarContainer = () => {
 
   const monthKey = format(currentMonth, "yyyy-MM");
   const notesMap = getNotesMap(monthKey);
-  const monthNotes = notes.filter((n) => n.dateKey.startsWith(monthKey));
+  const monthNotes = notes.filter((n) => n.startDate.startsWith(monthKey) || n.endDate.startsWith(monthKey));
 
   return (
     <div
       ref={dragRef}
-      className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 select-none"
+      className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 select-none relative overflow-x-hidden"
       onMouseLeave={() => setIsDragging(false)}
     >
-      <div className="relative">
+      <div className="relative z-20">
         <DarkModeToggle isDark={isDark} onToggle={() => setIsDark(!isDark)} />
         <HeroImage currentMonth={currentMonth} />
       </div>
@@ -138,19 +138,20 @@ const CalendarContainer = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 -mt-6 relative z-10 pb-16"
+        className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 -mt-12 relative z-30 pb-16"
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
-            className="lg:col-span-1 order-2 lg:order-1 transition-shadow duration-300"
+            className="lg:col-span-1 order-2 lg:order-1"
           >
             <NotesPanel
               currentMonth={currentMonth}
               selectedDate={selectedDate}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
               notes={monthNotes}
               onAddNote={addNote}
               onDeleteNote={deleteNote}
@@ -176,6 +177,7 @@ const CalendarContainer = () => {
               onDayTouchStart={handleTouchStart}
               onDayTouchMove={handleTouchMove}
               notesMap={notesMap}
+              allNotes={notes}
               direction={direction}
               isDragging={isDragging}
             />

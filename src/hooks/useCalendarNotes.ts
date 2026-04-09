@@ -24,11 +24,12 @@ export function useCalendarNotes() {
   }, [notes]);
 
   const addNote = useCallback(
-    (text: string, dateKey: string, color: NoteColor = "yellow") => {
+    (text: string, startDate: string, endDate: string, color: NoteColor = "yellow") => {
       const note: CalendarNote = {
         id: crypto.randomUUID(),
         text,
-        dateKey,
+        startDate,
+        endDate,
         color,
         createdAt: Date.now(),
       };
@@ -43,7 +44,7 @@ export function useCalendarNotes() {
 
   const getNotesForDate = useCallback(
     (dateKey: string): CalendarNote[] => {
-      return notes.filter((note) => note.dateKey === dateKey);
+      return notes.filter((note) => note.startDate === dateKey && note.endDate === dateKey);
     },
     [notes]
   );
@@ -52,11 +53,14 @@ export function useCalendarNotes() {
     (monthPrefix: string): Record<string, CalendarNote[]> => {
       const map: Record<string, CalendarNote[]> = {};
       notes.forEach((note) => {
-        if (note.dateKey.startsWith(monthPrefix)) {
-          if (!map[note.dateKey]) {
-            map[note.dateKey] = [];
+        // Only include single-day notes in the map for DayCell
+        if (note.startDate === note.endDate) {
+          if (note.startDate.startsWith(monthPrefix)) {
+            if (!map[note.startDate]) {
+              map[note.startDate] = [];
+            }
+            map[note.startDate].push(note);
           }
-          map[note.dateKey].push(note);
         }
       });
       return map;

@@ -20,11 +20,11 @@ const HeroImage = ({ currentMonth }: HeroImageProps) => {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/50" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-50" />
-      <div className="absolute bottom-12 left-8 md:left-12 relative z-10">
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white drop-shadow-lg tracking-tight">
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+        <h1 className="text-4xl md:text-6xl lg:text-8xl font-display font-bold text-white drop-shadow-2xl tracking-tight text-center">
           {format(currentMonth, "MMMM")}
         </h1>
-        <p className="text-xl md:text-2xl font-body font-light text-white/80 drop-shadow mt-1 tracking-wide">
+        <p className="text-xl md:text-2xl font-body font-light text-white/90 drop-shadow mt-2 tracking-[0.2em] uppercase">
           {format(currentMonth, "yyyy")}
         </p>
       </div>

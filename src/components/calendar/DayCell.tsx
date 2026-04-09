@@ -67,7 +67,7 @@ const DayCell = ({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative w-full h-24 sm:h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col shadow-soft",
+        "relative w-full h-28 p-2 rounded-lg text-sm font-body font-medium transition-colors duration-200 cursor-pointer select-none border border-transparent overflow-hidden flex flex-col shadow-soft",
         isOverflow && "text-calendar-overflow cursor-default opacity-40",
         !isOverflow && !isRangeStart && !isRangeEnd && !isInRange && "hover:bg-accent hover:border-border",
         isToday && !isRangeStart && !isRangeEnd && "ring-2 ring-calendar-today ring-inset font-semibold",
